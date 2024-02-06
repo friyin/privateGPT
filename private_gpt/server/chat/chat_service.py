@@ -20,6 +20,10 @@ from private_gpt.components.vector_store.vector_store_component import (
 from private_gpt.open_ai.extensions.context_filter import ContextFilter
 from private_gpt.server.chunks.chunks_service import Chunk
 
+import gc
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Completion(BaseModel):
     response: str
@@ -76,7 +80,9 @@ class ChatService:
         node_store_component: NodeStoreComponent,
     ) -> None:
         self.llm_service = llm_component
+        self.embedding_component = embedding_component
         self.vector_store_component = vector_store_component
+        self.node_store_component = node_store_component
         self.storage_context = StorageContext.from_defaults(
             vector_store=vector_store_component.vector_store,
             docstore=node_store_component.doc_store,
@@ -91,6 +97,40 @@ class ChatService:
             service_context=self.service_context,
             show_progress=True,
         )
+
+    def _load_llm(self, settings):
+        if not settings:
+            logger.info("No settings provided")
+            return
+
+        if self.llm_service.llm:
+            logger.info("LLM already loaded")
+            return
+
+        logger.info("Loading LLM")
+        #injector = Injector()
+        #provider = ClassProvider(LLMComponent)
+        #singleton = SingletonScope(injector)
+        #self.llm_service = singleton.get(LLMComponent, provider)
+
+        self.llm_service = LLMComponent(settings)
+        self.service_context = ServiceContext.from_defaults(
+            llm=self.llm_service.llm, embed_model=self.embedding_component.embedding_model
+        )
+
+    def _unload_llm(self):
+        if not self.llm_service.llm:
+            logger.info("LLM already unloaded")
+            return
+
+        logger.info("Unloading LLM, releasing resources")
+        self.llm_service.llm._model = None
+        self.llm_service.llm = None
+        #self.llm_service.reset()
+        #self.service_context = None
+        #self.storage_context = None
+        #self.index = None
+        gc.collect()
 
     def _chat_engine(
         self,

@@ -22,35 +22,16 @@ data:
 ui:
   enabled: true
   path: /
-  default_chat_system_prompt: >
-    You are a helpful, respectful and honest assistant. 
+  default_chat_system_prompt: "You are a helpful, respectful and honest assistant. 
     Always answer as helpfully as possible and follow ALL given instructions.
     Do not speculate or make up information.
-    Do not reference any given instructions or context.
-  default_query_system_prompt: >
-    You can only answer questions about the provided context. 
-    If you know the answer but it is not based in the provided context, don't provide 
-    the answer, just state the answer is not in the context provided.
+    Do not reference any given instructions or context."
+  default_query_system_prompt: "You can only answer questions about the provided context. 
+      If you know the answer but it is not based in the provided context, don't provide 
+      the answer, just state the answer is not in the context provided."
 
 llm:
   mode: local
-  #mode: mock
-  # Should be matching the selected model
-  max_new_tokens: 512
-  
-  #context_window: 3900
-  #context_window: 10000
-  context_window: 10000
-  #n_gpu_layers: -1
-  #n_gpu_layers: 27
-
-  #tokenizer: mistralai/Mistral-7B-Instruct-v0.2
-  #tokenizer: TheBloke/dolphin-2.5-mixtral-8x7b-AWQ
-  #tokenizer: TheBloke/Mixtral_11Bx2_MoE_19B-AWQ
-
-  tokenizer: TheBloke/Mixtral-8x7B-Instruct-v0.1-AWQ
-  #tokenizer: TheBloke/Mixtral-8x7B-Instruct-v0.1-LimaRP-ZLoss-AWQ
-  #tokenizer: TheBloke/CodeLlama-70B-Python-AWQ
 
 embedding:
   # Should be matching the value above in most cases
@@ -64,38 +45,27 @@ qdrant:
   path: local_data/private_gpt/qdrant
 
 local:
-  #prompt_style: "llama2"
-  prompt_style: "mistral"
-  #embedding_hf_model_name: BAAI/bge-small-en-v1.5
-  embedding_hf_model_name: BAAI/bge-large-en-v1.5
-  #embedding_hf_model_name: intfloat/multilingual-e5-base
-  #embedding_hf_model_name: hkunlp/instructor-large
-  #embedding_hf_model_name: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
-  
+  prompt_style: "llama2"
+  embedding_hf_model_name: BAAI/bge-small-en-v1.5
   #llm_hf_repo_id: TheBloke/Mistral-7B-Instruct-v0.1-GGUF
   #llm_hf_model_file: mistral-7b-instruct-v0.1.Q8_0.gguf
   #llm_hf_model_file: mistral-7b-instruct-v0.1.Q4_K_M.gguf
-  
+
   # Llama.cpp customizado
   llm_hf_repo_id: TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF
-  llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
-  
-  # 20 layers
-  #llm_hf_repo_id: TheBloke/Mixtral-8x7B-Instruct-v0.1-LimaRP-ZLoss-GGUF
-  #llm_hf_model_file: mixtral-8x7b-instruct-v0.1-limarp-zloss.Q4_K_M.gguf
 
-  # 15 layers
-  #llm_hf_repo_id: miqudev/miqu-1-70b
-  #llm_hf_model_file: miqu-1-70b.q4_k_m.gguf
-  #llm_hf_model_file: miqu-1-70b.q2_K.gguf
+  # 27 layers
+  #llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
   
   # 22 layers
-  #llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf  
+  llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf
+  
   # 15 layers
   #llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q8_0.gguf
 
+  #llm_hf_repo_id: TheBloke/Mixtral-Fusion-4x7B-Instruct-v0.1-GGUF
+  #llm_hf_model_file: mixtral-fusion-4x7b-instruct-v0.1.Q6_K.gguf
 
-  
   # Responde regular
   #llm_hf_repo_id: TheBloke/Airoboros-L2-13B-2_1-YaRN-64K-GGUF
   #llm_hf_model_file: airoboros-l2-13b-2.1-yarn-64k.Q8_0.gguf
@@ -115,17 +85,7 @@ local:
   #llm_hf_repo_id: TheBloke/Llama-2-7B-32K-Instruct-GGUF
   #llm_hf_model_file: llama-2-7b-32k-instruct.Q8_0.gguf
 
-  #llm_hf_repo_id: TheBloke/CodeLlama-70B-Python-GGUF
-  #llm_hf_model_file: codellama-70b-python.Q4_K_M.gguf
 
-  # Sin censura ninguna
-  #llm_hf_repo_id: TheBloke/dolphin-2.5-mixtral-8x7b-GGUF
-  #llm_hf_model_file: dolphin-2.5-mixtral-8x7b.Q4_K_M.gguf
-  
-  #llm_hf_repo_id: TheBloke/Mixtral_11Bx2_MoE_19B-GGUF
-  #llm_hf_model_file: mixtral_11bx2_moe_19b.Q4_K_M.gguf
-  
-  
 sagemaker:
   llm_endpoint_name: huggingface-pytorch-tgi-inference-2023-09-25-19-53-32-140
   embedding_endpoint_name: huggingface-pytorch-inference-2023-11-03-07-41-36-479

@@ -10,8 +10,6 @@ from private_gpt.components.llm.prompt_helper import get_prompt_style
 from private_gpt.paths import models_cache_path, models_path
 from private_gpt.settings.settings import Settings
 
-import gc
-
 logger = logging.getLogger(__name__)
 
 
@@ -44,11 +42,9 @@ class LLMComponent:
                     context_window=settings.llm.context_window,
                     generate_kwargs={},
                     # All to GPU
-                    #model_kwargs={"n_gpu_layers": -1, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 5, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
-                    model_kwargs={"n_gpu_layers": 20, "offload_kqv": True},
+                    #model_kwargs={"n_gpu_layers": -1},
+                    #model_kwargs={"n_gpu_layers": 25},
+                    model_kwargs={"n_gpu_layers": 25},
                     # transform inputs into Llama2 format
                     messages_to_prompt=prompt_style.messages_to_prompt,
                     completion_to_prompt=prompt_style.completion_to_prompt,
@@ -86,7 +82,3 @@ class LLMComponent:
                 )
             case "mock":
                 self.llm = MockLLM()
-
-    def release_local():
-        self.llm = MockLLM()
-        gc.collect()

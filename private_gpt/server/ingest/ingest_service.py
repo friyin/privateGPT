@@ -20,20 +20,20 @@ from private_gpt.components.vector_store.vector_store_component import (
 from private_gpt.server.ingest.model import IngestedDoc
 from private_gpt.settings.settings import settings
 
-logger = logging.getLogger(__name__)
+import gc
 
+logger = logging.getLogger(__name__)
 
 @singleton
 class IngestService:
     @inject
     def __init__(
         self,
-        llm_component: LLMComponent,
         vector_store_component: VectorStoreComponent,
         embedding_component: EmbeddingComponent,
         node_store_component: NodeStoreComponent,
     ) -> None:
-        self.llm_service = llm_component
+        self.embedding_component = embedding_component
         self.storage_context = StorageContext.from_defaults(
             vector_store=vector_store_component.vector_store,
             docstore=node_store_component.doc_store,
@@ -41,7 +41,7 @@ class IngestService:
         )
         node_parser = SentenceWindowNodeParser.from_defaults()
         self.ingest_service_context = ServiceContext.from_defaults(
-            llm=self.llm_service.llm,
+            llm=None,
             embed_model=embedding_component.embedding_model,
             node_parser=node_parser,
             # Embeddings done early in the pipeline of node transformations, right
@@ -52,6 +52,25 @@ class IngestService:
         self.ingest_component = get_ingestion_component(
             self.storage_context, self.ingest_service_context, settings=settings()
         )
+
+    def _load_em(self, settings):
+        if not settings:
+            logger.info("No settings provided")
+            return
+
+
+    def _unload_em(self):
+        if not self.embedding_component.embedding_model:
+            logger.info("EM already unloaded")
+            return
+
+        logger.info("Unloading EM, releasing resources")
+        self.embedding_component.embedding_model = None
+        self.embedding_component = None
+        self.storage_context = None
+        self.ingest_service_context = None
+        self.ingest_component = None
+        gc.collect()
 
     def _ingest_data(self, file_name: str, file_data: AnyStr) -> list[IngestedDoc]:
         logger.debug("Got file data of size=%s to ingest", len(file_data))

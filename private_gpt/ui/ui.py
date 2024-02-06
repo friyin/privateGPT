@@ -20,6 +20,8 @@ from private_gpt.server.ingest.ingest_service import IngestService
 from private_gpt.settings.settings import settings
 from private_gpt.ui.images import logo_svg
 
+import gc
+
 logger = logging.getLogger(__name__)
 
 THIS_DIRECTORY_RELATIVE = Path(__file__).parent.relative_to(PROJECT_ROOT_PATH)
@@ -205,6 +207,17 @@ class PrivateGptUi:
         paths = [Path(file) for file in files]
         self._ingest_service.bulk_ingest([(str(path.name), path) for path in paths])
 
+
+    def _load_llm(self) -> None:
+        logger.info("Loading LLM")
+        self._chat_service._load_llm(settings())
+
+
+    def _unload_llm(self) -> None:
+        logger.info("Unloading LLM")
+        self._chat_service._unload_llm()
+
+
     def _build_ui_blocks(self) -> gr.Blocks:
         logger.debug("Creating the UI blocks")
         with gr.Blocks(
@@ -227,6 +240,31 @@ class PrivateGptUi:
         ) as blocks:
             with gr.Row():
                 gr.HTML(f"<div class='logo'/><img src={logo_svg} alt=PrivateGPT></div")
+
+            with gr.Row(equal_height=False):
+                with gr.Column(scale=2):
+                    load_llm_button = gr.Button(
+                        "Load LLM",
+                    )
+                    load_llm_button.click(self._load_llm)
+                with gr.Column(scale=2):
+                    unload_llm_button = gr.Button(
+                        "Unload LLM",
+                    )
+                    unload_llm_button.click(self._unload_llm)
+                with gr.Column(scale=2):
+                    show_llm_button = gr.Button(
+                        "Load Embeddings",
+                    )
+                with gr.Column(scale=2):
+                    toggle_debug_button = gr.Button(
+                        "Unload Embeddings",
+                    )
+                with gr.Column(scale=2):
+                    toggle_debug_button = gr.Button(
+                        "Toggle Debug",
+                    )
+                
 
             with gr.Row(equal_height=False):
                 with gr.Column(scale=3):
