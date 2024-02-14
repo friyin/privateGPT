@@ -33,8 +33,8 @@ ui:
     the answer, just state the answer is not in the context provided.
 
 llm:
-  mode: local
-  #mode: mock
+  #mode: local
+  mode: mock
   # Should be matching the selected model
   max_new_tokens: 512
   
@@ -79,6 +79,7 @@ local:
   # Llama.cpp customizado
   llm_hf_repo_id: TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF
   llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf
+  #llm_hf_model_file: mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf
   
   # 20 layers
   #llm_hf_repo_id: TheBloke/Mixtral-8x7B-Instruct-v0.1-LimaRP-ZLoss-GGUF

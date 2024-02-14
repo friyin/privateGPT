@@ -28,7 +28,7 @@ THIS_DIRECTORY_RELATIVE = Path(__file__).parent.relative_to(PROJECT_ROOT_PATH)
 # Should be "private_gpt/ui/avatar-bot.ico"
 AVATAR_BOT = THIS_DIRECTORY_RELATIVE / "avatar-bot.ico"
 
-UI_TAB_TITLE = "My Private GPT"
+UI_TAB_TITLE = "DocumAI"
 
 SOURCES_SEPARATOR = "\n\n Sources: \n"
 
@@ -217,6 +217,8 @@ class PrivateGptUi:
         logger.info("Unloading LLM")
         self._chat_service._unload_llm()
 
+    def _select_file(self, evt: gr.SelectData) -> None:
+        logger.info(f"Selected file {evt.index}")
 
     def _build_ui_blocks(self) -> gr.Blocks:
         logger.debug("Creating the UI blocks")
@@ -238,96 +240,110 @@ class PrivateGptUi:
             "#chatbot { flex-grow: 1 !important; overflow: auto !important;}"
             "#col { height: calc(100vh - 112px - 16px) !important; }",
         ) as blocks:
-            with gr.Row():
-                gr.HTML(f"<div class='logo'/><img src={logo_svg} alt=PrivateGPT></div")
+            with gr.Tab("Manage Docs"):                
+                with gr.Row():
+                    gr.HTML(f"<div class='logo'/><img src={logo_svg} alt=DocumAI></div>")
 
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=2):
-                    load_llm_button = gr.Button(
-                        "Load LLM",
-                    )
-                    load_llm_button.click(self._load_llm)
-                with gr.Column(scale=2):
-                    unload_llm_button = gr.Button(
-                        "Unload LLM",
-                    )
-                    unload_llm_button.click(self._unload_llm)
-                with gr.Column(scale=2):
-                    show_llm_button = gr.Button(
-                        "Load Embeddings",
-                    )
-                with gr.Column(scale=2):
-                    toggle_debug_button = gr.Button(
-                        "Unload Embeddings",
-                    )
-                with gr.Column(scale=2):
-                    toggle_debug_button = gr.Button(
-                        "Toggle Debug",
-                    )
-                
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=2):
+                        load_llm_button = gr.Button(
+                            "Load LLM",
+                        )
+                        load_llm_button.click(self._load_llm)
+                    with gr.Column(scale=2):
+                        unload_llm_button = gr.Button(
+                            "Unload LLM",
+                        )
+                        unload_llm_button.click(self._unload_llm)
+                    with gr.Column(scale=2):
+                        show_llm_button = gr.Button(
+                            "Load Embeddings",
+                        )
+                    with gr.Column(scale=2):
+                        toggle_debug_button = gr.Button(
+                            "Unload Embeddings",
+                        )
+                    with gr.Column(scale=2):
+                        toggle_debug_button = gr.Button(
+                            "Toggle Debug",
+                        )
+                    
 
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=3):
-                    mode = gr.Radio(
-                        MODES,
-                        label="Mode",
-                        value="Query Docs",
-                    )
-                    upload_button = gr.components.UploadButton(
-                        "Upload File(s)",
-                        type="filepath",
-                        file_count="multiple",
-                        size="sm",
-                    )
-                    ingested_dataset = gr.List(
-                        self._list_ingested_files,
-                        headers=["File name"],
-                        label="Ingested Files",
-                        interactive=False,
-                        render=False,  # Rendered under the button
-                    )
-                    upload_button.upload(
-                        self._upload_file,
-                        inputs=upload_button,
-                        outputs=ingested_dataset,
-                    )
-                    ingested_dataset.change(
-                        self._list_ingested_files,
-                        outputs=ingested_dataset,
-                    )
-                    ingested_dataset.render()
-                    system_prompt_input = gr.Textbox(
-                        placeholder=self._system_prompt,
-                        label="System Prompt",
-                        lines=2,
-                        interactive=True,
-                        render=False,
-                    )
-                    # When mode changes, set default system prompt
-                    mode.change(
-                        self._set_current_mode, inputs=mode, outputs=system_prompt_input
-                    )
-                    # On blur, set system prompt to use in queries
-                    system_prompt_input.blur(
-                        self._set_system_prompt,
-                        inputs=system_prompt_input,
-                    )
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=10):
+                        upload_button = gr.components.UploadButton(
+                            "Upload File(s)",
+                            type="filepath",
+                            file_count="multiple",
+                            size="sm",
+                        )
+                        ingested_dataset = gr.List(
+                            self._list_ingested_files,
+                            headers=["File name"],
+                            label="Ingested Files",
+                            interactive=False,
+                            render=False,  # Rendered under the button
+                        )
 
-                with gr.Column(scale=7, elem_id="col"):
-                    _ = gr.ChatInterface(
-                        self._chat,
-                        chatbot=gr.Chatbot(
-                            label=f"LLM: {settings().llm.mode}",
-                            show_copy_button=True,
-                            elem_id="chatbot",
+                        upload_button.upload(
+                            self._upload_file,
+                            inputs=upload_button,
+                            outputs=ingested_dataset,
+                        )
+                        ingested_dataset.select(
+                            self._select_file,
+                            None)
+
+                        ingested_dataset.change(
+                            self._list_ingested_files,
+                            outputs=ingested_dataset,
+                        )
+                        ingested_dataset.render()
+                        system_prompt_input = gr.Textbox(
+                            placeholder=self._system_prompt,
+                            label="System Prompt",
+                            lines=2,
+                            interactive=True,
                             render=False,
-                            avatar_images=(
-                                None,
-                                AVATAR_BOT,
+                        )
+
+            with gr.Tab("AI Chat"):
+                with gr.Row():
+                    gr.HTML(f"<div class='logo'/>Query Docs TAB</div>")
+
+                with gr.Row():
+                    with gr.Column(scale=10, elem_id="col"):
+                        mode = gr.Radio(
+                            MODES,
+                            label="Mode",
+                            value="Query Docs",
+                        )
+                        _ = gr.ChatInterface(
+                            self._chat,
+                            chatbot=gr.Chatbot(
+                                label=f"LLM: {settings().llm.mode}",
+                                show_copy_button=True,
+                                elem_id="chatbot",
+                                render=False,
+                                avatar_images=(
+                                    None,
+                                    AVATAR_BOT,
+                                ),
                             ),
-                        ),
-                        additional_inputs=[mode, upload_button, system_prompt_input],
-                    )
+                            additional_inputs=[mode, upload_button, system_prompt_input],
+                        )
+
+                        # When mode changes, set default system prompt
+                        mode.change(
+                            self._set_current_mode, inputs=mode, outputs=system_prompt_input
+                        )
+                        # On blur, set system prompt to use in queries
+                        system_prompt_input.blur(
+                            self._set_system_prompt,
+                            inputs=system_prompt_input,
+                        )
+
+            
         return blocks
 
     def get_ui_blocks(self) -> gr.Blocks:

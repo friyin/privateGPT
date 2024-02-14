@@ -19,9 +19,35 @@ logger = logging.getLogger(__name__)
 class LLMComponent:
     llm: LLM
 
+    def __init_llm_local(self, settings):
+        from llama_index.llms import LlamaCPP
+
+        prompt_style = get_prompt_style(settings.local.prompt_style)
+
+        llm = LlamaCPP(
+            model_path=str(models_path / settings.local.llm_hf_model_file),
+            temperature=0.1,
+            max_new_tokens=settings.llm.max_new_tokens,
+            context_window=settings.llm.context_window,
+            generate_kwargs={},
+            # All to GPU
+            #model_kwargs={"n_gpu_layers": -1, "offload_kqv": True},
+            #model_kwargs={"n_gpu_layers": 5, "offload_kqv": True},
+            #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
+            #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
+            model_kwargs={"n_gpu_layers": 20, "offload_kqv": True},
+            # transform inputs into Llama2 format
+            messages_to_prompt=prompt_style.messages_to_prompt,
+            completion_to_prompt=prompt_style.completion_to_prompt,
+            verbose=True,
+        )        
+        return llm
+
     @inject
     def __init__(self, settings: Settings) -> None:
         llm_mode = settings.llm.mode
+        self.settings = settings
+
         if settings.llm.tokenizer:
             set_global_tokenizer(
                 AutoTokenizer.from_pretrained(
@@ -33,27 +59,7 @@ class LLMComponent:
         logger.info("Initializing the LLM in mode=%s", llm_mode)
         match settings.llm.mode:
             case "local":
-                from llama_index.llms import LlamaCPP
-
-                prompt_style = get_prompt_style(settings.local.prompt_style)
-
-                self.llm = LlamaCPP(
-                    model_path=str(models_path / settings.local.llm_hf_model_file),
-                    temperature=0.1,
-                    max_new_tokens=settings.llm.max_new_tokens,
-                    context_window=settings.llm.context_window,
-                    generate_kwargs={},
-                    # All to GPU
-                    #model_kwargs={"n_gpu_layers": -1, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 5, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
-                    #model_kwargs={"n_gpu_layers": 40, "offload_kqv": True},
-                    model_kwargs={"n_gpu_layers": 20, "offload_kqv": True},
-                    # transform inputs into Llama2 format
-                    messages_to_prompt=prompt_style.messages_to_prompt,
-                    completion_to_prompt=prompt_style.completion_to_prompt,
-                    verbose=True,
-                )
+                self.llm = self.__init_llm_local(settings)
 
             case "sagemaker":
                 from private_gpt.components.llm.custom.sagemaker import SagemakerLLM
@@ -87,6 +93,19 @@ class LLMComponent:
             case "mock":
                 self.llm = MockLLM()
 
-    def release_local():
-        self.llm = MockLLM()
-        gc.collect()
+    def release_local(self):
+        if self.llm._model:
+            logger.info("Releasing LLM: In progress")
+            self.llm._model = None
+            gc.collect()
+            logger.info("Releasing LLM: Done")
+        else:
+            logger.info("No LLM loaded")
+
+    def load_local(self):
+        if not self.llm._model:
+            logger.info("Loading LLM: In progress")
+            self.llm._model = self.__init_llm_local(self.settings)._model
+            logger.info("Loading LLM: Done")
+        else:
+            logger.info("Reloading")
